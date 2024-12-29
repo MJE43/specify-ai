@@ -1,35 +1,37 @@
-import { useState } from "react";
-import { ProjectQuestionnaire } from "@/components/ProjectQuestionnaire";
-import { Documentation } from "@/components/Documentation";
-import { toast } from "sonner";
+"use client"
+
+import { Documentation } from "@/components/Documentation"
+import { ProjectQuestionnaire } from "@/components/ProjectQuestionnaire"
+import { motion } from "framer-motion"
+import { Sparkles } from 'lucide-react'
+import { useState } from "react"
+import { toast } from "sonner"
 
 interface QuestionnaireData {
-  projectName: string;
-  projectDescription: string;
-  targetAudience: string;
-  keyFeatures: string;
-  technicalConstraints: string;
+  projectName: string
+  projectDescription: string
+  targetAudience: string
+  keyFeatures: string
+  technicalConstraints: string
 }
 
 interface DocumentationSections {
-  requirements: string;
-  backend: string;
-  techStack: string;
-  frontend: string;
-  fileStructure: string;
-  appFlow: string;
-  systemPrompts: string;
+  requirements: string
+  backend: string
+  techStack: string
+  frontend: string
+  fileStructure: string
+  appFlow: string
+  systemPrompts: string
 }
 
-const Index = () => {
-  const [documentation, setDocumentation] = useState<DocumentationSections | null>(null);
-  const [projectName, setProjectName] = useState("");
+export default function Page() {
+  const [documentation, setDocumentation] = useState<DocumentationSections | null>(null)
+  const [projectName, setProjectName] = useState("")
 
   const generateDocumentation = async (data: QuestionnaireData) => {
-    // In a real application, this would call an AI service
-    // For now, we'll generate some placeholder documentation
-    setProjectName(data.projectName);
-    
+    setProjectName(data.projectName)
+
     const mockDocumentation: DocumentationSections = {
       requirements: `Project Goals:\n${data.projectDescription}\n\nTarget Audience:\n${data.targetAudience}\n\nKey Features:\n${data.keyFeatures}\n\nTechnical Constraints:\n${data.technicalConstraints}`,
       backend: "API Endpoints:\n- /api/auth\n- /api/users\n- /api/projects\n\nData Models:\n- User\n- Project\n- Documentation",
@@ -38,37 +40,47 @@ const Index = () => {
       fileStructure: "src/\n  components/\n  pages/\n  utils/\n  hooks/\n  types/\n  api/",
       appFlow: "1. User Authentication\n2. Project Creation\n3. Documentation Generation\n4. Export and Integration",
       systemPrompts: "Instructions for AI Code Generation:\n1. Follow the technical specifications\n2. Implement security best practices\n3. Ensure code maintainability",
-    };
+    }
 
-    toast.success("Documentation generated successfully!");
-    setDocumentation(mockDocumentation);
-  };
+    toast.success("Documentation generated successfully!")
+    setDocumentation(mockDocumentation)
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 py-12 px-4">
       <div className="max-w-7xl mx-auto">
         {!documentation ? (
-          <div className="space-y-8">
-            <div className="text-center">
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-8"
+          >
+            <div className="text-center space-y-4">
+              <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-4">
+                <Sparkles className="h-4 w-4" />
+                <span className="text-sm font-medium">AI-Powered Documentation</span>
+              </div>
+              <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-gray-50 tracking-tight">
                 Project Specification Generator
               </h1>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Create clear, AI-ready documentation for your web application
+              <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                Create clear, AI-ready documentation for your web application in minutes
               </p>
             </div>
             <div className="flex justify-center">
               <ProjectQuestionnaire onComplete={generateDocumentation} />
             </div>
-          </div>
+          </motion.div>
         ) : (
-          <div className="flex justify-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex justify-center"
+          >
             <Documentation projectName={projectName} sections={documentation} />
-          </div>
+          </motion.div>
         )}
       </div>
     </div>
-  );
-};
-
-export default Index;
+  )
+}
