@@ -1,70 +1,40 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-if (!geminiApiKey) {
-  throw new Error('Missing Gemini API key');
-}
-
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    if (!geminiApiKey) {
+      throw new Error('Missing Gemini API key');
+    }
+
     const { questionnaireData } = await req.json();
     
-    // Format the questionnaire data for the prompt
+    const genAI = new GoogleGenerativeAI(geminiApiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+    const systemPrompt = `As a senior technical documentation specialist, analyze this project description and generate comprehensive documentation sections. Be detailed and professional.`;
+
     const formattedInput = Object.entries(questionnaireData)
       .map(([key, value]) => `${key}: ${value}`)
       .join('\n\n');
 
-    const response = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${geminiApiKey}`,
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: `As a senior solutions architect, analyze this project description and generate comprehensive documentation:
+    const prompt = `${systemPrompt}\n\nProject Details:\n${formattedInput}\n\nGenerate the following sections:\n1. Project Requirements\n2. Technical Stack\n3. Backend Architecture\n4. Frontend Guidelines\n5. File Structure\n6. Application Flow\n7. System Prompts`;
 
-${formattedInput}
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
 
-Generate the following sections:
-1. Project Requirements
-2. Technical Stack Recommendations
-3. Backend Architecture
-4. Frontend Guidelines
-5. File Structure
-6. Application Flow
-7. System Prompts for AI Code Generation`
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 8192,
-        },
-      }),
-    });
-
-    const result = await response.json();
-    console.log('Gemini API Response:', result);
-
-    if (!result.candidates?.[0]?.content?.parts?.[0]?.text) {
-      throw new Error('Invalid response from Gemini API');
-    }
-
-    const generatedText = result.candidates[0].content.parts[0].text;
-    
     // Parse the generated text into sections
     const sections = {
       projectRequirements: '',
@@ -77,7 +47,7 @@ Generate the following sections:
     };
 
     let currentSection = '';
-    const lines = generatedText.split('\n');
+    const lines = text.split('\n');
     
     for (const line of lines) {
       if (line.includes('Project Requirements')) {
@@ -98,6 +68,8 @@ Generate the following sections:
         sections[currentSection] += line + '\n';
       }
     }
+
+    console.log('Generated documentation sections:', Object.keys(sections));
 
     return new Response(JSON.stringify(sections), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
