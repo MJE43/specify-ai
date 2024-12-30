@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Code2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const Signup = () => {
@@ -18,17 +18,26 @@ const Signup = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/login`
+        }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Signup error:', error);
+        throw error;
+      }
 
-      toast.success("Check your email to confirm your account!");
-      navigate("/login");
+      if (data?.user) {
+        toast.success("Check your email to confirm your account!");
+        navigate("/login");
+      }
     } catch (error: any) {
-      toast.error(error.message);
+      console.error('Signup error:', error);
+      toast.error(error.message || "Failed to create account");
     } finally {
       setLoading(false);
     }
