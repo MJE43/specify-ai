@@ -3,11 +3,6 @@ import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  // Temporarily bypass authentication check
-  return <>{children}</>;
-
-  // Original authentication logic (commented out for now)
-  /*
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
 
@@ -29,5 +24,4 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   return <>{children}</>;
-  */
 };
