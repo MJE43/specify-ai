@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ProjectQuestionnaire } from "@/components/ProjectQuestionnaire";
 import { Documentation } from "@/components/Documentation";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface QuestionnaireData {
   projectName: string;
@@ -25,6 +26,23 @@ const Index = () => {
   const [documentation, setDocumentation] = useState<DocumentationSections | null>(null);
   const [projectName, setProjectName] = useState("");
 
+  const saveDocumentationToSupabase = async (projectName: string, documentation: DocumentationSections) => {
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .insert([
+          { project_name: projectName, documentation }
+        ]);
+
+      if (error) throw error;
+
+      toast.success("Documentation saved to Supabase!");
+    } catch (error) {
+      console.error('Error saving documentation to Supabase:', error);
+      toast.error("Failed to save documentation to Supabase.");
+    }
+  };
+
   const generateDocumentation = async (data: QuestionnaireData) => {
     // In a real application, this would call an AI service
     // For now, we'll generate some placeholder documentation
@@ -42,6 +60,9 @@ const Index = () => {
 
     toast.success("Documentation generated successfully!");
     setDocumentation(mockDocumentation);
+
+    // Save the generated documentation to Supabase
+    await saveDocumentationToSupabase(data.projectName, mockDocumentation);
   };
 
   return (

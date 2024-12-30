@@ -124,6 +124,42 @@ export type Database = {
           },
         ]
       }
+      new_table_1: {
+        Row: {
+          id: string
+          name: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      new_table_2: {
+        Row: {
+          id: string
+          description: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          description?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          description?: string | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
