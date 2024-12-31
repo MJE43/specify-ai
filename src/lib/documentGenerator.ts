@@ -1,7 +1,7 @@
 import { DocumentType, GeneratedDocuments, QuestionnaireResponse, GenerationProgress, ProgressCallback } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { GeminiService } from './geminiService';
-import { documentPrompts } from './documentPrompts';
+import { documentPrompts } from '../data/prompts';
 
 export class DocumentGenerator {
   private geminiService: GeminiService;
@@ -18,10 +18,13 @@ export class DocumentGenerator {
     try {
       const prompt = documentPrompts[documentType];
       const context = this.buildContext(previousDocuments);
+      const formattedQuestionnaireData = this.formatQuestionnaireData(questionnaireResponse);
       
-      const fullPrompt = `${prompt.systemPrompt}\n\n${context}\n\nProject Details:\n${this.formatQuestionnaireData(questionnaireResponse)}\n\n${prompt.formatInstructions}`;
+      const content = await this.geminiService.generateText(
+        prompt.systemPrompt,
+        `${context}\n\nProject Details:\n${formattedQuestionnaireData}\n\n${prompt.userPrompt}`
+      );
       
-      const content = await this.geminiService.generateText(fullPrompt);
       return content;
     } catch (error) {
       console.error(`Error generating ${documentType}:`, error);
