@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download } from "lucide-react";
+import { GenerationProgress } from "@/lib/types";
 
-// Update the Documentation component to show generation progress
 interface DocumentationProps {
   projectName: string;
   sections: {
