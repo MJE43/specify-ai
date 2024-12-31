@@ -22,18 +22,14 @@ export class GeminiService {
     };
   }
 
-  async generateText(systemPrompt: string, userPrompt: string): Promise<string> {
+  async generateText(prompt: string): Promise<string> {
     try {
       const chat = this.model.startChat({
         generationConfig: this.config,
         history: [],
       });
 
-      // First, set the context with the system prompt
-      await chat.sendMessage(systemPrompt);
-
-      // Then send the user's prompt and get the response
-      const result = await chat.sendMessage(userPrompt);
+      const result = await chat.sendMessage(prompt);
       return result.response.text();
     } catch (error) {
       console.error('Error generating text with Gemini:', error);
