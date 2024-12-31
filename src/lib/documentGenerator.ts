@@ -1,6 +1,7 @@
-import { DocumentType, GeneratedDocuments, QuestionnaireResponse } from './types';
+import { DocumentType, GeneratedDocuments, QuestionnaireResponse, GenerationProgress, ProgressCallback } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { GeminiService } from './geminiService';
+import { documentPrompts } from './documentPrompts';
 
 export class DocumentGenerator {
   private geminiService: GeminiService;
@@ -15,10 +16,12 @@ export class DocumentGenerator {
     previousDocuments: Partial<GeneratedDocuments> = {}
   ): Promise<string> {
     try {
-      const systemPrompt = this.getSystemPrompt(documentType);
-      const userPrompt = this.formatQuestionnaireData(questionnaireResponse);
+      const prompt = documentPrompts[documentType];
+      const context = this.buildContext(previousDocuments);
       
-      const content = await this.geminiService.generateText(systemPrompt, userPrompt);
+      const fullPrompt = `${prompt.systemPrompt}\n\n${context}\n\nProject Details:\n${this.formatQuestionnaireData(questionnaireResponse)}\n\n${prompt.formatInstructions}`;
+      
+      const content = await this.geminiService.generateText(fullPrompt);
       return content;
     } catch (error) {
       console.error(`Error generating ${documentType}:`, error);
@@ -27,7 +30,8 @@ export class DocumentGenerator {
   }
 
   async generateAllDocuments(
-    questionnaireResponse: QuestionnaireResponse
+    questionnaireResponse: QuestionnaireResponse,
+    onProgress?: ProgressCallback
   ): Promise<GeneratedDocuments> {
     try {
       const documents: GeneratedDocuments = {
@@ -40,12 +44,27 @@ export class DocumentGenerator {
         systemPrompts: ''
       };
 
+      const documentTypes = Object.keys(documents) as DocumentType[];
+      const totalSteps = documentTypes.length;
+
       // Generate each document type sequentially
-      for (const documentType of Object.keys(documents) as DocumentType[]) {
+      for (let i = 0; i < documentTypes.length; i++) {
+        const documentType = documentTypes[i];
+        
+        // Update progress
+        onProgress?.({
+          currentStep: i + 1,
+          totalSteps,
+          currentDocument: documentType,
+          status: 'generating'
+        });
+
+        // Generate document with context from previous documents
+        const previousDocs = { ...documents };
         documents[documentType] = await this.generateSingleDocument(
           documentType,
           questionnaireResponse,
-          documents
+          previousDocs
         );
       }
 
@@ -55,34 +74,36 @@ export class DocumentGenerator {
         await this.saveDocumentsToSupabase(projectId, documents);
       }
 
+      // Final progress update
+      onProgress?.({
+        currentStep: totalSteps,
+        totalSteps,
+        currentDocument: null,
+        status: 'completed'
+      });
+
       return documents;
     } catch (error) {
       console.error('Error generating documents:', error);
+      onProgress?.({
+        currentStep: 0,
+        totalSteps: 0,
+        currentDocument: null,
+        status: 'error'
+      });
       throw error;
     }
   }
 
-  private getSystemPrompt(documentType: DocumentType): string {
-    const basePrompt = "As a senior technical documentation specialist, analyze the project details and generate a comprehensive";
-    
-    switch (documentType) {
-      case 'projectRequirements':
-        return `${basePrompt} requirements document that includes functional and non-functional requirements.`;
-      case 'techStack':
-        return `${basePrompt} technical stack recommendation with justifications for each technology choice.`;
-      case 'backendStructure':
-        return `${basePrompt} backend architecture document including API endpoints, data models, and security considerations.`;
-      case 'frontendGuidelines':
-        return `${basePrompt} frontend development guidelines including component structure, state management, and UI/UX patterns.`;
-      case 'fileStructure':
-        return `${basePrompt} file structure document detailing the organization of the codebase.`;
-      case 'appFlow':
-        return `${basePrompt} application flow document describing the user journey and system interactions.`;
-      case 'systemPrompts':
-        return `${basePrompt} set of system prompts for AI code generation that align with the project requirements.`;
-      default:
-        return basePrompt;
-    }
+  private buildContext(previousDocuments: Partial<GeneratedDocuments>): string {
+    if (Object.keys(previousDocuments).length === 0) return '';
+
+    return `Previously Generated Documents:\n\n${
+      Object.entries(previousDocuments)
+        .filter(([_, content]) => content)
+        .map(([type, content]) => `${type}:\n${content}\n`)
+        .join('\n')
+    }`;
   }
 
   private formatQuestionnaireData(data: QuestionnaireResponse): string {

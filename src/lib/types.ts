@@ -32,3 +32,12 @@ export interface PromptTemplate {
 export interface QuestionnaireResponse {
   [key: string]: string | number | boolean | object;
 }
+
+export interface GenerationProgress {
+  currentStep: number;
+  totalSteps: number;
+  currentDocument: DocumentType | null;
+  status: 'idle' | 'generating' | 'completed' | 'error';
+}
+
+export type ProgressCallback = (progress: GenerationProgress) => void;

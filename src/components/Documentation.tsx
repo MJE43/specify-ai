@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download } from "lucide-react";
 
+// Update the Documentation component to show generation progress
 interface DocumentationProps {
   projectName: string;
   sections: {
@@ -14,9 +15,10 @@ interface DocumentationProps {
     appFlow: string;
     systemPrompts: string;
   };
+  progress?: GenerationProgress;
 }
 
-export const Documentation = ({ projectName, sections }: DocumentationProps) => {
+export const Documentation = ({ projectName, sections, progress }: DocumentationProps) => {
   const handleExport = () => {
     const content = Object.entries(sections)
       .map(([key, value]) => `# ${key.charAt(0).toUpperCase() + key.slice(1)}\n\n${value}`)
@@ -42,6 +44,25 @@ export const Documentation = ({ projectName, sections }: DocumentationProps) => 
           Export
         </Button>
       </div>
+
+      {progress && progress.status === 'generating' && (
+        <div className="mb-4">
+          <div className="flex justify-between mb-2">
+            <span className="text-sm text-gray-600">
+              Generating {progress.currentDocument?.replace(/([A-Z])/g, ' $1').toLowerCase()}...
+            </span>
+            <span className="text-sm text-gray-600">
+              {progress.currentStep} of {progress.totalSteps}
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-primary h-2 rounded-full transition-all duration-300"
+              style={{ width: `${(progress.currentStep / progress.totalSteps) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       <Tabs defaultValue="requirements" className="w-full">
         <TabsList className="grid grid-cols-7 w-full">
