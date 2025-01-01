@@ -9,7 +9,7 @@ import * as z from "zod";
 import { DocumentGenerator } from '@/lib/documentGenerator';
 import { FormFields } from './FormFields';
 import { GeneratedContent } from './GeneratedContent';
-import { GeneratedDocuments } from '@/lib/types';
+import { GeneratedDocuments, QuestionnaireResponse } from '@/lib/types';
 
 const formSchema = z.object({
   projectName: z.string().min(2, {
@@ -51,7 +51,14 @@ export function DocumentGeneratorForm() {
     setIsGenerating(true);
     try {
       const documentGenerator = new DocumentGenerator();
-      const documents = await documentGenerator.generateAllDocuments(values);
+      const questionnaireResponse: QuestionnaireResponse = {
+        projectName: values.projectName,
+        projectDescription: values.projectDescription,
+        targetAudience: values.targetAudience,
+        keyFeatures: values.keyFeatures,
+        technicalConstraints: values.technicalConstraints,
+      };
+      const documents = await documentGenerator.generateAllDocuments(questionnaireResponse);
       setGeneratedDocs(documents);
       toast({
         title: "Documents Generated Successfully",

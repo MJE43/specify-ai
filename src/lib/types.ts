@@ -18,7 +18,6 @@ export interface GeneratedDocuments {
 }
 
 export interface QuestionnaireResponse {
-  [key: string]: string | number | boolean | object;
   projectName: string;
   projectDescription: string;
   targetAudience: string;
@@ -31,6 +30,11 @@ export interface GenerationProgress {
   totalSteps: number;
   currentDocument: DocumentType | null;
   status: 'idle' | 'generating' | 'completed' | 'error';
+}
+
+export interface PromptTemplate {
+  systemPrompt: string;
+  userPrompt: string;
 }
 
 export type ProgressCallback = (progress: GenerationProgress) => void;
