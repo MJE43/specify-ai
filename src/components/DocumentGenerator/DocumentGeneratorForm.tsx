@@ -9,13 +9,13 @@ import * as z from "zod";
 import { DocumentGenerator } from '@/lib/documentGenerator';
 import { FormFields } from './FormFields';
 import { GeneratedContent } from './GeneratedContent';
-import { DocumentGeneratorFormValues, GeneratedDocuments } from './types';
+import { GeneratedDocuments } from '@/lib/types';
 
 const formSchema = z.object({
   projectName: z.string().min(2, {
     message: "Project name must be at least 2 characters.",
   }),
-  description: z.string().min(10, {
+  projectDescription: z.string().min(10, {
     message: "Description must be at least 10 characters.",
   }),
   targetAudience: z.string().min(5, {
@@ -24,30 +24,30 @@ const formSchema = z.object({
   keyFeatures: z.string().min(10, {
     message: "Key features must be at least 10 characters.",
   }),
-  technicalPreferences: z.string().optional(),
-  businessGoals: z.string().min(10, {
-    message: "Business goals must be at least 10 characters.",
+  technicalConstraints: z.string().min(10, {
+    message: "Technical constraints must be at least 10 characters.",
   }),
 });
+
+type FormValues = z.infer<typeof formSchema>;
 
 export function DocumentGeneratorForm() {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedDocs, setGeneratedDocs] = useState<GeneratedDocuments | null>(null);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       projectName: "",
-      description: "",
+      projectDescription: "",
       targetAudience: "",
       keyFeatures: "",
-      technicalPreferences: "",
-      businessGoals: "",
+      technicalConstraints: "",
     },
   });
 
-  async function onSubmit(values: DocumentGeneratorFormValues) {
+  async function onSubmit(values: FormValues) {
     setIsGenerating(true);
     try {
       const documentGenerator = new DocumentGenerator();
