@@ -5,3 +5,13 @@ export interface DocumentGeneratorFormValues {
   keyFeatures: string;
   technicalConstraints: string;
 }
+
+export interface GeneratedDocuments {
+  requirements: string;
+  backend: string;
+  techStack: string;
+  frontend: string;
+  fileStructure: string;
+  appFlow: string;
+  systemPrompts: string;
+}
