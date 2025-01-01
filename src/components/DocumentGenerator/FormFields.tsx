@@ -30,7 +30,7 @@ export const FormFields = ({ form }: FormFieldsProps) => {
 
       <FormField
         control={form.control}
-        name="description"
+        name="projectDescription"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Project Description</FormLabel>
@@ -81,6 +81,27 @@ export const FormFields = ({ form }: FormFieldsProps) => {
             </FormControl>
             <FormDescription>
               List the main features and functionality
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="technicalConstraints"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Technical Constraints</FormLabel>
+            <FormControl>
+              <Textarea
+                placeholder="List any technical requirements or limitations..."
+                className="min-h-[100px]"
+                {...field}
+              />
+            </FormControl>
+            <FormDescription>
+              Specify any technical constraints or requirements
             </FormDescription>
             <FormMessage />
           </FormItem>
