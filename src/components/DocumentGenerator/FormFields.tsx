@@ -2,10 +2,20 @@ import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessa
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { UseFormReturn } from "react-hook-form";
-import { DocumentGeneratorFormValues } from "./types";
+import * as z from "zod";
+
+const formSchema = z.object({
+  projectName: z.string(),
+  projectDescription: z.string(),
+  targetAudience: z.string(),
+  keyFeatures: z.string(),
+  technicalConstraints: z.string(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface FormFieldsProps {
-  form: UseFormReturn<DocumentGeneratorFormValues>;
+  form: UseFormReturn<FormValues>;
 }
 
 export const FormFields = ({ form }: FormFieldsProps) => {

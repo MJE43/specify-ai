@@ -7,16 +7,6 @@ export type DocumentType =
   | 'appFlow'
   | 'systemPrompts';
 
-export interface GeneratedDocuments {
-  requirements: string;
-  backend: string;
-  techStack: string;
-  frontend: string;
-  fileStructure: string;
-  appFlow: string;
-  systemPrompts: string;
-}
-
 export interface QuestionnaireResponse {
   projectName: string;
   projectDescription: string;
@@ -37,4 +27,12 @@ export interface PromptTemplate {
   userPrompt: string;
 }
 
-export type ProgressCallback = (progress: GenerationProgress) => void;
+export interface GeneratedDocuments {
+  requirements: string;
+  backend: string;
+  techStack: string;
+  frontend: string;
+  fileStructure: string;
+  appFlow: string;
+  systemPrompts: string;
+}

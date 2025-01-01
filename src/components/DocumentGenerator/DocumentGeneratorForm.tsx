@@ -9,8 +9,7 @@ import * as z from "zod";
 import { DocumentGenerator } from '@/lib/documentGenerator';
 import { FormFields } from './FormFields';
 import { GeneratedContent } from './GeneratedContent';
-import { GeneratedDocuments } from './types';
-import { QuestionnaireResponse } from '@/lib/types';
+import { QuestionnaireResponse, GeneratedDocuments } from '@/lib/types';
 
 const formSchema = z.object({
   projectName: z.string().min(2, {

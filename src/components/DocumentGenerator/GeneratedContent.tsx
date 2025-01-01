@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { GeneratedDocuments } from "./types";
+import { GeneratedDocuments } from '@/lib/types';
 
 interface GeneratedContentProps {
   documents: GeneratedDocuments;
