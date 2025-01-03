@@ -1,72 +1,161 @@
-import { useState } from "react";
 import { ProjectQuestionnaire } from "@/components/ProjectQuestionnaire";
 import { Documentation } from "@/components/Documentation";
-import { toast } from "sonner";
-
-interface QuestionnaireData {
-  projectName: string;
-  projectDescription: string;
-  targetAudience: string;
-  keyFeatures: string;
-  technicalConstraints: string;
-}
-
-interface DocumentationSections {
-  requirements: string;
-  backend: string;
-  techStack: string;
-  frontend: string;
-  fileStructure: string;
-  appFlow: string;
-  systemPrompts: string;
-}
+import { useDocumentGeneration } from "@/hooks/useDocumentGeneration";
+import { QuestionnaireResponse, DocumentType } from "@/lib/types";
+import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { RotateCcw } from "lucide-react";
 
 const Index = () => {
-  const [documentation, setDocumentation] = useState<DocumentationSections | null>(null);
-  const [projectName, setProjectName] = useState("");
+  const { documents, isGenerating, progress, generateDocuments, error, reset } =
+    useDocumentGeneration();
 
-  const generateDocumentation = async (data: QuestionnaireData) => {
-    // In a real application, this would call an AI service
-    // For now, we'll generate some placeholder documentation
-    setProjectName(data.projectName);
-    
-    const mockDocumentation: DocumentationSections = {
-      requirements: `Project Goals:\n${data.projectDescription}\n\nTarget Audience:\n${data.targetAudience}\n\nKey Features:\n${data.keyFeatures}\n\nTechnical Constraints:\n${data.technicalConstraints}`,
-      backend: "API Endpoints:\n- /api/auth\n- /api/users\n- /api/projects\n\nData Models:\n- User\n- Project\n- Documentation",
-      techStack: "Frontend:\n- React\n- TypeScript\n- Tailwind CSS\n\nBackend:\n- Node.js\n- Express\n- PostgreSQL",
-      frontend: "Component Structure:\n- Layout\n- Authentication\n- Project Management\n- Documentation Generator",
-      fileStructure: "src/\n  components/\n  pages/\n  utils/\n  hooks/\n  types/\n  api/",
-      appFlow: "1. User Authentication\n2. Project Creation\n3. Documentation Generation\n4. Export and Integration",
-      systemPrompts: "Instructions for AI Code Generation:\n1. Follow the technical specifications\n2. Implement security best practices\n3. Ensure code maintainability",
-    };
-
-    toast.success("Documentation generated successfully!");
-    setDocumentation(mockDocumentation);
+  const documentLabels: Record<DocumentType, string> = {
+    projectRequirements: "Project Requirements",
+    backendStructure: "Backend Structure",
+    techStack: "Technology Stack",
+    frontendGuidelines: "Frontend Guidelines",
+    fileStructure: "File Structure",
+    appFlow: "Application Flow",
+    systemPrompts: "System Prompts",
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-7xl mx-auto">
-        {!documentation ? (
-          <div className="space-y-8">
-            <div className="text-center">
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                Project Specification Generator
-              </h1>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Create clear, AI-ready documentation for your web application
+  const handleQuestionnaireSubmit = async (data: QuestionnaireResponse) => {
+    try {
+      await generateDocuments(data);
+    } catch (error) {
+      // Error is handled by the hook, but we could add additional handling here
+      console.error("Error in questionnaire submission:", error);
+    }
+  };
+
+  const GenerationStatus = () => (
+    <Card className="w-full max-w-4xl p-6">
+      <div className="space-y-6">
+        <div className="flex flex-col space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">
+              Generating project documentation
+            </span>
+            <span className="font-medium">
+              {Math.round((progress.currentStep / progress.totalSteps) * 100)}%
+            </span>
+          </div>
+          <Progress
+            value={(progress.currentStep / progress.totalSteps) * 100}
+            className="h-2"
+          />
+        </div>
+
+        {progress.currentDocument && (
+          <div className="space-y-4">
+            <div className="bg-muted/50 p-4 rounded-lg">
+              <h3 className="text-lg font-medium text-primary mb-2">
+                {documentLabels[progress.currentDocument]}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Generating detailed documentation for your{" "}
+                {progress.currentDocument
+                  .replace(/([A-Z])/g, " $1")
+                  .toLowerCase()}
+                ...
               </p>
             </div>
-            <div className="flex justify-center">
-              <ProjectQuestionnaire onComplete={generateDocumentation} />
-            </div>
-          </div>
-        ) : (
-          <div className="flex justify-center">
-            <Documentation projectName={projectName} sections={documentation} />
+            <p className="text-sm text-muted-foreground text-center">
+              Step {progress.currentStep} of {progress.totalSteps}
+            </p>
           </div>
         )}
       </div>
+    </Card>
+  );
+
+  const ErrorState = () => (
+    <Card className="w-full max-w-4xl p-6">
+      <div className="text-center space-y-4">
+        <h3 className="text-lg font-medium text-destructive">
+          Generation Failed
+        </h3>
+        <p className="text-muted-foreground">
+          {error?.message || "Failed to generate documentation"}
+        </p>
+        <Button variant="outline" onClick={reset} className="gap-2">
+          <RotateCcw className="h-4 w-4" />
+          Try Again
+        </Button>
+      </div>
+    </Card>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <div className="container mx-auto py-12 px-4 md:px-6">
+        {!documents && !isGenerating && !error && (
+          <div className="space-y-8">
+            <div className="text-center max-w-3xl mx-auto">
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                Project Specification Generator
+              </h1>
+              <p className="text-xl text-gray-600">
+                Transform your project idea into clear, AI-ready documentation
+              </p>
+              <p className="mt-4 text-muted-foreground">
+                Our AI will help create comprehensive documentation that can be
+                used to build your application
+              </p>
+            </div>
+
+            <div className="flex justify-center">
+              <ProjectQuestionnaire onComplete={handleQuestionnaireSubmit} />
+            </div>
+          </div>
+        )}
+
+        {isGenerating && (
+          <div className="flex flex-col items-center space-y-8">
+            <div className="text-center max-w-2xl mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                Generating Your Documentation
+              </h2>
+              <p className="text-muted-foreground">
+                Please wait while we create detailed documentation for your
+                project
+              </p>
+            </div>
+            <GenerationStatus />
+          </div>
+        )}
+
+        {error && !isGenerating && (
+          <div className="flex flex-col items-center space-y-8">
+            <ErrorState />
+          </div>
+        )}
+
+        {documents && !isGenerating && !error && (
+          <div className="flex justify-center">
+            <Documentation
+              projectName={documents.projectName}
+              sections={documents}
+              progress={progress}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Add a footer with some helpful information */}
+      <footer className="py-6 text-center text-sm text-muted-foreground border-t bg-muted/20 mt-12">
+        <div className="container mx-auto px-4">
+          <p>
+            This documentation will help AI code generators understand and build
+            your application. Need help?{" "}
+            <a href="/support" className="text-primary hover:underline">
+              Contact Support
+            </a>
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };
